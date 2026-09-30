@@ -1,5 +1,7 @@
 # Shadow-Traffic
 
+🇬🇧 [English version](README.md)
+
 **Voit ce qui sort réellement de la machine, en ce moment — y compris ce que vos outils basés sur le DNS ne peuvent pas voir.**
 
 `Shadow-Traffic` observe les connexions TCP sortantes réelles pendant une fenêtre de temps fixe (2 minutes par défaut), lit le nom d'hôte de destination directement sur le fil quand c'est possible (via le champ SNI du ClientHello TLS, grâce à un parseur de paquets bas niveau écrit à la main — aucun outil de capture externe requis en dehors de `pktmon`, natif à Windows), et croise chaque endpoint avec les listes de domaines connus de [Block-Telemetry](../Block-Telemetry). Résultat : une image en direct de ce à quoi votre machine parle réellement, quel processus en est responsable, et si l'un de ces échanges concerne un domaine censé être bloqué mais qui passe quand même.
