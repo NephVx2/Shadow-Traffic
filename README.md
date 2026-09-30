@@ -1,5 +1,7 @@
 # Shadow-Traffic
 
+🇫🇷 [Version française](README_FRENCH.md)
+
 **Sees what actually leaves the machine, right now — including what your DNS-based tools can't.**
 
 `Shadow-Traffic` watches real outbound TCP connections for a fixed window (default 2 minutes), reads the destination hostname straight off the wire when it can (via the TLS ClientHello's SNI field, using a hand-written low-level packet parser — no external capture tool required beyond Windows' own `pktmon`), and cross-references every endpoint against [Block-Telemetry](../Block-Telemetry)'s known-domain lists. The result: a live picture of what your machine is actually talking to, which process is responsible, and whether any of it is a blocked domain that's still getting through.
