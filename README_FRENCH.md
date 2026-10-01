@@ -15,23 +15,23 @@
 ## Sommaire
 
 - [Pourquoi ce script existe](#pourquoi-ce-script-existe)
-- [Captures d'écran](#captures-decran)
+- [Captures d'écran](#captures-décran)
 - [Shadow-Traffic vs. Check-Network](#shadow-traffic-vs-check-network)
 - [Ce qu'il fait](#ce-quil-fait)
 - [Ce qu'il ne fait *pas*](#ce-quil-ne-fait-pas)
-- [Prérequis](#prerequis)
-- [Premier lancement (étape par étape)](#premier-lancement-etape-par-etape)
-- [Démarrage rapide](#demarrage-rapide)
+- [Prérequis](#prérequis)
+- [Premier lancement (étape par étape)](#premier-lancement-étape-par-étape)
+- [Démarrage rapide](#démarrage-rapide)
 - [Raccourci bureau](#raccourci-bureau)
-- [Paramètres](#parametres)
+- [Paramètres](#paramètres)
 - [Lire la sortie console](#lire-la-sortie-console)
 - [Comment fonctionne la classification](#comment-fonctionne-la-classification)
 - [Le rapport HTML](#le-rapport-html)
 - [Rapports et fichiers](#rapports-et-fichiers)
-- [Intégration avec Block-Telemetry](#integration-avec-block-telemetry)
-- [Confidentialité](#confidentialite)
+- [Intégration avec Block-Telemetry](#intégration-avec-block-telemetry)
+- [Confidentialité](#confidentialité)
 - [Self-test](#self-test)
-- [Dépannage](#depannage)
+- [Dépannage](#dépannage)
 
 ---
 
