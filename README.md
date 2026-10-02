@@ -76,7 +76,7 @@ Both scripts inspect network activity, both produce an HTML/JSON/CSV report, and
 - Cross-references every named endpoint against [Block-Telemetry](../Block-Telemetry)'s blocked and whitelisted domain lists, and flags anything that matches a **blocked** domain as an **ANOMALY** (it got through despite being on the blocklist — a bypass).
 - Keeps a persistent baseline (`Baseline_Shadow-Traffic.json`) across runs, so it can flag endpoints that have **never been seen before**.
 - Compares against the previous run's report to flag endpoints that were present before and have **vanished** this time.
-- Produces a dark-themed HTML report with a live search bar, category filter buttons, and a small history sparkline of the "unclassified" count across recent runs.
+- Produces a dark-themed HTML report in the same style as Check-Security: summary cards, a classification bar, the evolution since the last run, a history chart, live search, filter chips and sortable columns.
 - Purges its own old reports automatically (`-PurgeDays`, default 60 — the baseline is never purged).
 - Shows a desktop toast notification with a one-line summary when the run finishes.
 - Can filter the whole audit down to a single process (`-ProcessName`).
@@ -116,7 +116,7 @@ For a more detailed walkthrough (including what each warning actually means and 
 
 ## Quick start
 
-Check that the script runs correctly on your machine (no capture, no admin rights needed — runs 21 internal checks and exits):
+Check that the script runs correctly on your machine (no capture, no admin rights needed — runs 31 internal checks and exits):
 ```powershell
 .\Shadow-Traffic.ps1 -SelfTest
 ```
@@ -164,7 +164,7 @@ Quiet run for a scheduled task (still writes the reports, no console output, no 
 | `-PurgeDays <N>` | `60` | Deletes this script's own reports (json/csv/html/log) older than N days. `0` disables purging. The baseline file is never purged. |
 | `-NoToast` | off | Disables the desktop notification shown when the run finishes. |
 | `-DebugClientHello` | off | Saves, in hex, any ClientHello the parser detected but couldn't extract an SNI from (direct or after reassembly), to a `Debug-ClientHello\` subfolder — useful for reporting a parser bug. |
-| `-SelfTest` | off | Runs the built-in test suite (21 assertions) and exits. No real capture, no admin rights needed. |
+| `-SelfTest` | off | Runs the built-in test suite (31 assertions) and exits. No real capture, no admin rights needed. |
 | `-Silent` | off | Reduces console output to a minimum. Logs and reports are still written normally. |
 
 ## Reading the console output
@@ -210,7 +210,16 @@ On top of the category, each endpoint can also be marked:
 
 ## The HTML report
 
-The report opens with summary cards (Anomalies / Unclassified / New / Vanished / Total, plus a small sparkline of the Unclassified count across recent runs), a free-text search box, and filter buttons (All / Anomalies / Unclassified / Known). Every row shows the target, its category, the owning process, the port, how many times it was seen, and where the name came from.
+The report uses the same visual style as Check-Security (header with logo and a meta bar showing the machine, date, OS and capture settings). From top to bottom:
+
+- A **banner**: red, with jump links to each anomaly, if blocked domains were still reachable; a warning if the Block-Telemetry reference couldn't be found; a green "no anomaly" box otherwise.
+- A **classification bar** splitting the endpoints between anomalies, known and unclassified.
+- An **Evolution since the last run** block listing the new and the vanished endpoints, and a small **history chart** of the Unclassified count over recent runs (with min/max).
+- **Summary cards**: Total / Anomalies / Known / Unclassified / New / Vanished.
+- The **detailed table**, with a live search box, filter chips (All / Anomalies / Unclassified / Known / New) and sortable columns. Every row shows the target, its category, the owning process (with its PID), the port, how many times it was seen, and where the name came from.
+- When applicable, a **Vanished since the last run** table and a **SNI captured with no matching TCP connection** table — the same lists the console shows.
+
+Names coming from the network (SNI, PTR, ASN, process names) are HTML-escaped, and SNI/PTR names containing anything other than letters, digits, `_ . : -` are discarded at capture time.
 
 ## Reports and files
 
@@ -237,7 +246,7 @@ The SNI capture path (`-CaptureSNI`) necessarily sees which hostnames your machi
 ```powershell
 .\Shadow-Traffic.ps1 -SelfTest
 ```
-Runs 21 internal assertions covering IP classification, domain classification, the packet parser (built from hand-crafted TLS fixtures, including a real truncated Windows/Edge ClientHello that once broke SNI extraction), TCP reassembly, UDP/QUIC detection, ASN query construction, and the baseline round-trip. No real capture, no admin rights required.
+Runs 31 internal assertions covering IP classification, domain classification, the packet parser (built from hand-crafted TLS fixtures, including a real truncated Windows/Edge ClientHello that once broke SNI extraction), TCP reassembly, UDP/QUIC detection, ASN query construction, the baseline round-trip, and output safety (HTML escaping, hostname validation, CSV formula protection, and an end-to-end HTML export). No real capture, no admin rights required.
 
 ## Troubleshooting
 
