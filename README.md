@@ -116,6 +116,12 @@ For a more detailed walkthrough (including what each warning actually means and 
 
 ## Quick start
 
+Check that the script runs correctly on your machine (no capture, no admin rights needed — runs 21 internal checks and exits):
+```powershell
+.\Shadow-Traffic.ps1 -SelfTest
+```
+See [Self-test](#self-test) for what it covers.
+
 Basic 2-minute TCP-only audit, no admin rights needed:
 ```powershell
 .\Shadow-Traffic.ps1
@@ -165,22 +171,30 @@ Quiet run for a scheduled task (still writes the reports, no console output, no 
 
 A typical run prints:
 
-1. A header banner with the script name and version.
-2. Whether Block-Telemetry was found, and how many blocked/whitelisted domains it loaded.
-3. A live progress line while sampling connections (`Capturing... 45 / 120 s — 12 distinct endpoints seen`).
-4. A **SUMMARY** block:
+1. A framed header banner with the script name and version.
+2. A **Reference** line: whether Block-Telemetry was found (✓) or not (!), and how many blocked/whitelisted domains it loaded.
    ```
-   Distinct endpoints observed : 18
-   Anomalies (blocked but reachable) : 1
-   Known (whitelist, normal)         : 6
-   Unclassified to review            : 11
-   Never seen before (new)           : 3
-   Vanished since last run            : 2
+   18:40:12  ✓  Reference           │ Block-Telemetry : 227 blocked domains  ·  71 whitelisted
    ```
-5. If any anomalies were found, an **ANOMALIES** block listing each one — this is the section to look at first.
-6. An **UNCLASSIFIED** block, sorted by how often each endpoint was seen, with `[NEW]` markers and the name source in parentheses (`SNI: ...`, `PTR`, an ASN, or nothing at all if it's a bare IP).
-7. If applicable, a **VANISHED SINCE LAST RUN** block (endpoints that were present in the previous report but not this time — not necessarily a problem, connections can be one-off).
-8. If SNI capture is on and any SNI couldn't be matched to a TCP connection (the connection was too short-lived to be sampled), an **SNI CAPTURED WITH NO MATCHING TCP CONNECTION** block.
+3. A live progress bar while sampling connections, updated in place. It turns into a ✓ line once the window is complete:
+   ```
+   18:42:07  ·  Capture             │ ████████░░░░░░░░░░░░   45/120 s  ·  12 endpoints
+   ```
+4. A **SUMMARY** block — one line per category, with a stacked bar showing how the endpoints split between anomalies (red), known (green) and unclassified (yellow):
+   ```
+   ·  Endpoints observed   18   ████████████████████
+   ✗  Anomalies             1   blocked but reachable
+   ✓  Known                 6   whitelist, normal
+   !  Unclassified         11   to review
+   +  New                   3   never seen before
+   -  Vanished              2   present in the previous run, absent now
+   ```
+   An icon turns into a green ✓ when its count is zero (anomalies, unclassified).
+5. If any anomalies were found, an **ANOMALIES** table listing each one — this is the section to look at first.
+6. An **UNCLASSIFIED** table, sorted by how often each endpoint was seen, with the columns `TARGET │ PROCESS │ COUNT │ SOURCE`. Endpoints never seen before get a `+` icon and a `NEW` tag. `SOURCE` tells you where the name came from: `SNI`, `PTR`, the ASN, or `no name` if it's a bare IP. Target names longer than 52 characters are shortened with `...` in the console only — the reports always contain the full name.
+7. If applicable, a **VANISHED SINCE LAST RUN** table (endpoints that were present in the previous report but not this time — not necessarily a problem, connections can be one-off).
+8. If SNI capture is on and any SNI couldn't be matched to a TCP connection (the connection was too short-lived to be sampled), an **SNI CAPTURED WITH NO MATCHING TCP CONNECTION** table.
+9. A final **✓ AUDIT COMPLETE** banner listing every generated file (HTML report, JSON export, CSV export, log), then the prompt offering to open the HTML report and the "Press ENTER to close this window" box.
 
 ## How classification works
 
@@ -191,7 +205,7 @@ Every endpoint gets one of these categories, based on its resolved name (SNI tak
 - **Unclassified**: the name (or IP) doesn't match either list. This is where most of your review time will go — most of these are perfectly normal (CDNs, app backends, services you haven't categorized), but it's also where a genuinely new tracker would show up first.
 
 On top of the category, each endpoint can also be marked:
-- **`[NEW]`**: never appeared in any previous run's baseline.
+- **`NEW`** (a `+` icon in the console): never appeared in any previous run's baseline.
 - Listed under **Vanished**: was present last run, isn't this time.
 
 ## The HTML report
