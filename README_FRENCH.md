@@ -118,6 +118,12 @@ Pour un guide plus détaillé (avec l'explication de chaque avertissement), voir
 
 ## Démarrage rapide
 
+Vérifier que le script fonctionne correctement sur votre machine (aucune capture, aucun droit admin requis — exécute 21 vérifications internes puis quitte) :
+```powershell
+.\Shadow-Traffic.ps1 -SelfTest
+```
+Voir [Self-test](#self-test) pour le détail de ce qui est couvert.
+
 Audit TCP de base sur 2 minutes, sans droits admin :
 ```powershell
 .\Shadow-Traffic.ps1
@@ -167,22 +173,30 @@ Lancement silencieux pour une tâche planifiée (les rapports sont quand même �
 
 Un lancement typique affiche :
 
-1. Une bannière d'en-tête avec le nom du script et sa version.
-2. Si Block-Telemetry a été trouvé, et combien de domaines bloqués/en liste blanche ont été chargés.
-3. Une ligne de progression en direct pendant l'échantillonnage des connexions (`Capturing... 45 / 120 s — 12 distinct endpoints seen`).
-4. Un bloc **SUMMARY** :
+1. Une bannière d'en-tête encadrée avec le nom du script et sa version.
+2. Une ligne **Reference** : Block-Telemetry a-t-il été trouvé (✓) ou non (!), et combien de domaines bloqués/en liste blanche ont été chargés.
    ```
-   Distinct endpoints observed : 18
-   Anomalies (blocked but reachable) : 1
-   Known (whitelist, normal)         : 6
-   Unclassified to review            : 11
-   Never seen before (new)           : 3
-   Vanished since last run            : 2
+   18:40:12  ✓  Reference           │ Block-Telemetry : 227 blocked domains  ·  71 whitelisted
    ```
-5. Si des anomalies ont été trouvées, un bloc **ANOMALIES** les listant une par une — c'est la section à regarder en premier.
-6. Un bloc **UNCLASSIFIED**, trié par fréquence d'apparition, avec des marqueurs `[NEW]` et la source du nom entre parenthèses (`SNI: ...`, `PTR`, un ASN, ou rien du tout s'il s'agit d'une IP brute).
-7. Le cas échéant, un bloc **VANISHED SINCE LAST RUN** (endpoints présents dans le rapport précédent mais pas cette fois — pas forcément un problème, une connexion peut être ponctuelle).
-8. Si la capture SNI est activée et qu'un SNI n'a pas pu être rattaché à une connexion TCP (connexion trop courte pour être échantillonnée), un bloc **SNI CAPTURED WITH NO MATCHING TCP CONNECTION**.
+3. Une barre de progression en direct pendant l'échantillonnage des connexions, mise à jour sur place. Elle devient une ligne ✓ une fois la fenêtre terminée :
+   ```
+   18:42:07  ·  Capture             │ ████████░░░░░░░░░░░░   45/120 s  ·  12 endpoints
+   ```
+4. Un bloc **SUMMARY** — une ligne par catégorie, avec une barre empilée montrant la répartition des endpoints entre anomalies (rouge), connus (vert) et non classés (jaune) :
+   ```
+   ·  Endpoints observed   18   ████████████████████
+   ✗  Anomalies             1   blocked but reachable
+   ✓  Known                 6   whitelist, normal
+   !  Unclassified         11   to review
+   +  New                   3   never seen before
+   -  Vanished              2   present in the previous run, absent now
+   ```
+   Une icône devient un ✓ vert quand son compteur est à zéro (anomalies, non classés).
+5. Si des anomalies ont été trouvées, un tableau **ANOMALIES** les listant une par une — c'est la section à regarder en premier.
+6. Un tableau **UNCLASSIFIED**, trié par fréquence d'apparition, avec les colonnes `TARGET │ PROCESS │ COUNT │ SOURCE`. Les endpoints jamais vus auparavant reçoivent une icône `+` et un tag `NEW`. `SOURCE` indique d'où vient le nom : `SNI`, `PTR`, l'ASN, ou `no name` s'il s'agit d'une IP brute. Les noms de cibles de plus de 52 caractères sont raccourcis avec `...` dans la console uniquement — les rapports contiennent toujours le nom complet.
+7. Le cas échéant, un tableau **VANISHED SINCE LAST RUN** (endpoints présents dans le rapport précédent mais pas cette fois — pas forcément un problème, une connexion peut être ponctuelle).
+8. Si la capture SNI est activée et qu'un SNI n'a pas pu être rattaché à une connexion TCP (connexion trop courte pour être échantillonnée), un tableau **SNI CAPTURED WITH NO MATCHING TCP CONNECTION**.
+9. Une bannière finale **✓ AUDIT COMPLETE** listant tous les fichiers générés (rapport HTML, export JSON, export CSV, log), puis la question proposant d'ouvrir le rapport HTML et le cadre « Press ENTER to close this window ».
 
 ## Comment fonctionne la classification
 
@@ -193,7 +207,7 @@ Chaque endpoint reçoit l'une de ces catégories, en fonction de son nom résolu
 - **Unclassified** : le nom (ou l'IP) ne correspond à aucune des deux listes. C'est là que passera l'essentiel de votre temps de revue — la plupart de ces cas sont parfaitement normaux (CDN, backends d'application, services pas encore catégorisés), mais c'est aussi là qu'un véritable nouveau traqueur apparaîtrait en premier.
 
 En plus de la catégorie, chaque endpoint peut aussi être marqué :
-- **`[NEW]`** : jamais apparu dans la baseline d'un lancement précédent.
+- **`NEW`** (une icône `+` dans la console) : jamais apparu dans la baseline d'un lancement précédent.
 - Listé sous **Vanished** : présent au lancement précédent, absent cette fois.
 
 ## Le rapport HTML
