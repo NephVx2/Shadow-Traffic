@@ -78,7 +78,7 @@ Les deux scripts examinent l'activité réseau, les deux produisent un rapport H
 - Croise chaque endpoint nommé avec les listes de domaines bloqués et en liste blanche de [Block-Telemetry](../Block-Telemetry), et marque comme **ANOMALY** tout ce qui correspond à un domaine **bloqué** (il est passé malgré tout — un contournement).
 - Conserve une baseline persistante (`Baseline_Shadow-Traffic.json`) entre les lancements, pour pouvoir signaler les endpoints **jamais vus auparavant**.
 - Compare avec le rapport du lancement précédent pour signaler les endpoints qui étaient présents avant et qui ont **disparu** cette fois.
-- Produit un rapport HTML au thème sombre avec une barre de recherche en direct, des boutons de filtre par catégorie, et une petite sparkline d'historique du nombre de « non classés » sur les derniers lancements.
+- Produit un rapport HTML au thème sombre, dans le même style que Check-Security : cartes de résumé, barre de classification, évolution depuis le dernier lancement, graphique d'historique, recherche en direct, pastilles de filtre et colonnes triables.
 - Purge automatiquement ses propres anciens rapports (`-PurgeDays`, 60 par défaut — la baseline n'est jamais purgée).
 - Affiche une notification bureau avec un résumé en une ligne à la fin du lancement.
 - Peut restreindre tout l'audit à un seul processus (`-ProcessName`).
@@ -118,7 +118,7 @@ Pour un guide plus détaillé (avec l'explication de chaque avertissement), voir
 
 ## Démarrage rapide
 
-Vérifier que le script fonctionne correctement sur votre machine (aucune capture, aucun droit admin requis — exécute 21 vérifications internes puis quitte) :
+Vérifier que le script fonctionne correctement sur votre machine (aucune capture, aucun droit admin requis — exécute 31 vérifications internes puis quitte) :
 ```powershell
 .\Shadow-Traffic.ps1 -SelfTest
 ```
@@ -166,7 +166,7 @@ Lancement silencieux pour une tâche planifiée (les rapports sont quand même �
 | `-PurgeDays <N>` | `60` | Supprime les propres rapports du script (json/csv/html/log) plus vieux que N jours. `0` désactive la purge. Le fichier de baseline n'est jamais purgé. |
 | `-NoToast` | désactivé | Désactive la notification bureau affichée à la fin du lancement. |
 | `-DebugClientHello` | désactivé | Sauvegarde en hexadécimal tout ClientHello détecté par le parseur mais dont le SNI n'a pas pu être extrait (direct ou après réassemblage), dans un sous-dossier `Debug-ClientHello\` — utile pour signaler un bug du parseur. |
-| `-SelfTest` | désactivé | Exécute la suite de tests intégrée (21 assertions) et quitte. Aucune capture réelle, aucun droit admin requis. |
+| `-SelfTest` | désactivé | Exécute la suite de tests intégrée (31 assertions) et quitte. Aucune capture réelle, aucun droit admin requis. |
 | `-Silent` | désactivé | Réduit la sortie console au minimum. Les logs et rapports sont quand même écrits normalement. |
 
 ## Lire la sortie console
@@ -212,7 +212,16 @@ En plus de la catégorie, chaque endpoint peut aussi être marqué :
 
 ## Le rapport HTML
 
-Le rapport s'ouvre sur des cartes de résumé (Anomalies / Unclassified / New / Vanished / Total, plus une petite sparkline du nombre de non classés sur les derniers lancements), une barre de recherche en texte libre, et des boutons de filtre (All / Anomalies / Unclassified / Known). Chaque ligne affiche la cible, sa catégorie, le processus propriétaire, le port, le nombre de fois où elle a été vue, et la source du nom.
+Le rapport reprend le style visuel de Check-Security (en-tête avec logo et une barre d'infos indiquant la machine, la date, l'OS et les réglages de capture). De haut en bas :
+
+- Une **bannière** : rouge, avec des liens vers chaque anomalie, si des domaines bloqués étaient encore joignables ; un avertissement si la référence Block-Telemetry est introuvable ; une boîte verte « no anomaly » sinon.
+- Une **barre de classification** qui répartit les endpoints entre anomalies, connus et non classés.
+- Un bloc **Evolution since the last run** listant les endpoints nouveaux et disparus, et un petit **graphique d'historique** du nombre de non classés sur les derniers lancements (avec min/max).
+- Des **cartes de résumé** : Total / Anomalies / Known / Unclassified / New / Vanished.
+- Le **tableau détaillé**, avec une recherche en direct, des pastilles de filtre (All / Anomalies / Unclassified / Known / New) et des colonnes triables. Chaque ligne affiche la cible, sa catégorie, le processus propriétaire (avec son PID), le port, le nombre de fois où elle a été vue, et la source du nom.
+- Le cas échéant, un tableau **Vanished since the last run** et un tableau **SNI captured with no matching TCP connection** — les mêmes listes que dans la console.
+
+Les noms issus du réseau (SNI, PTR, ASN, noms de processus) sont échappés en HTML, et les noms SNI/PTR contenant autre chose que des lettres, chiffres ou `_ . : -` sont écartés dès la capture.
 
 ## Rapports et fichiers
 
@@ -239,7 +248,7 @@ Le chemin de capture SNI (`-CaptureSNI`) voit nécessairement à quels noms d'h�
 ```powershell
 .\Shadow-Traffic.ps1 -SelfTest
 ```
-Exécute 21 assertions internes couvrant la classification des IP, la classification des domaines, le parseur de paquets (construit à partir de fixtures TLS créées à la main, dont un vrai ClientHello Windows/Edge tronqué qui avait autrefois cassé l'extraction du SNI), le réassemblage TCP, la détection UDP/QUIC, la construction des requêtes ASN, et le cycle complet de la baseline. Aucune capture réelle, aucun droit admin requis.
+Exécute 31 assertions internes couvrant la classification des IP, la classification des domaines, le parseur de paquets (construit à partir de fixtures TLS créées à la main, dont un vrai ClientHello Windows/Edge tronqué qui avait autrefois cassé l'extraction du SNI), le réassemblage TCP, la détection UDP/QUIC, la construction des requêtes ASN, le cycle complet de la baseline, et la sûreté des sorties (échappement HTML, validation des noms d'hôte, protection CSV contre les formules, et un export HTML complet de bout en bout). Aucune capture réelle, aucun droit admin requis.
 
 ## Dépannage
 
