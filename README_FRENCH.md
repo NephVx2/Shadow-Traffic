@@ -118,7 +118,7 @@ Pour un guide plus détaillé (avec l'explication de chaque avertissement), voir
 
 ## Démarrage rapide
 
-Vérifier que le script fonctionne correctement sur votre machine (aucune capture, aucun droit admin requis — exécute 31 vérifications internes puis quitte) :
+Vérifier que le script fonctionne correctement sur votre machine (aucune capture, aucun droit admin requis — exécute 33 vérifications internes puis quitte) :
 ```powershell
 .\Shadow-Traffic.ps1 -SelfTest
 ```
@@ -166,7 +166,7 @@ Lancement silencieux pour une tâche planifiée (les rapports sont quand même �
 | `-PurgeDays <N>` | `60` | Supprime les propres rapports du script (json/csv/html/log) plus vieux que N jours. `0` désactive la purge. Le fichier de baseline n'est jamais purgé. |
 | `-NoToast` | désactivé | Désactive la notification bureau affichée à la fin du lancement. |
 | `-DebugClientHello` | désactivé | Sauvegarde en hexadécimal tout ClientHello détecté par le parseur mais dont le SNI n'a pas pu être extrait (direct ou après réassemblage), dans un sous-dossier `Debug-ClientHello\` — utile pour signaler un bug du parseur. |
-| `-SelfTest` | désactivé | Exécute la suite de tests intégrée (31 assertions) et quitte. Aucune capture réelle, aucun droit admin requis. |
+| `-SelfTest` | désactivé | Exécute la suite de tests intégrée (33 assertions) et quitte. Aucune capture réelle, aucun droit admin requis. |
 | `-Silent` | désactivé | Réduit la sortie console au minimum. Les logs et rapports sont quand même écrits normalement. |
 
 ## Lire la sortie console
@@ -193,7 +193,7 @@ Un lancement typique affiche :
    ```
    Une icône devient un ✓ vert quand son compteur est à zéro (anomalies, non classés).
 5. Si des anomalies ont été trouvées, un tableau **ANOMALIES** les listant une par une — c'est la section à regarder en premier.
-6. Un tableau **UNCLASSIFIED**, trié par fréquence d'apparition, avec les colonnes `TARGET │ PROCESS │ COUNT │ SOURCE`. Les endpoints jamais vus auparavant reçoivent une icône `+` et un tag `NEW`. `SOURCE` indique d'où vient le nom : `SNI`, `PTR`, l'ASN, ou `no name` s'il s'agit d'une IP brute. Les noms de cibles de plus de 52 caractères sont raccourcis avec `...` dans la console uniquement — les rapports contiennent toujours le nom complet.
+6. Un tableau **UNCLASSIFIED**, trié par fréquence d'apparition, avec les colonnes `TARGET │ PROCESS │ COUNT │ SOURCE`. Les endpoints jamais vus auparavant reçoivent une icône `+` et un tag `NEW`. `SOURCE` indique d'où vient le nom : `SNI`, `PTR`, l'ASN (organisation et numéro d'AS, par ex. `Microsoft Corporation, US (AS8075)` — le rapport HTML garde le texte complet du registre), ou `no name` s'il s'agit d'une IP brute. Les noms de cibles de plus de 52 caractères sont raccourcis avec `...` dans la console uniquement — les rapports contiennent toujours le nom complet.
 7. Le cas échéant, un tableau **VANISHED SINCE LAST RUN** (endpoints présents dans le rapport précédent mais pas cette fois — pas forcément un problème, une connexion peut être ponctuelle).
 8. Si la capture SNI est activée et qu'un SNI n'a pas pu être rattaché à une connexion TCP (connexion trop courte pour être échantillonnée), un tableau **SNI CAPTURED WITH NO MATCHING TCP CONNECTION**.
 9. Une bannière finale **✓ AUDIT COMPLETE** listant tous les fichiers générés (rapport HTML, export JSON, export CSV, log), puis la question proposant d'ouvrir le rapport HTML et le cadre « Press ENTER to close this window ».
@@ -232,7 +232,7 @@ Tous les fichiers sont écrits dans `Desktop\Maintenance_Reports\Shadow-Traffic\
 | `Shadow-Traffic_<horodatage>.html` | Le rapport interactif décrit ci-dessus. |
 | `Shadow-Traffic_<horodatage>.json` | Instantané complet et exploitable par machine du lancement (tous les endpoints, comptages, catégories). |
 | `Shadow-Traffic_Unclassified_<horodatage>.csv` | Uniquement les endpoints Unclassified et ANOMALY, pour une revue rapide dans Excel. |
-| `Shadow-Traffic_<horodatage>.log` | Journal de lancement en texte brut (horodatages, avertissements, erreurs). |
+| `Shadow-Traffic_<horodatage>.log` | Journal de lancement en texte brut (horodatages, avertissements, erreurs, une ligne de synthèse du run et la mise à jour de la baseline). |
 | `Baseline_Shadow-Traffic.json` | Historique persistant utilisé pour détecter les endpoints « jamais vus auparavant ». Jamais purgé par `-PurgeDays`. |
 
 ## Intégration avec Block-Telemetry
@@ -248,7 +248,7 @@ Le chemin de capture SNI (`-CaptureSNI`) voit nécessairement à quels noms d'h�
 ```powershell
 .\Shadow-Traffic.ps1 -SelfTest
 ```
-Exécute 31 assertions internes couvrant la classification des IP, la classification des domaines, le parseur de paquets (construit à partir de fixtures TLS créées à la main, dont un vrai ClientHello Windows/Edge tronqué qui avait autrefois cassé l'extraction du SNI), le réassemblage TCP, la détection UDP/QUIC, la construction des requêtes ASN, le cycle complet de la baseline, et la sûreté des sorties (échappement HTML, validation des noms d'hôte, protection CSV contre les formules, et un export HTML complet de bout en bout). Aucune capture réelle, aucun droit admin requis.
+Exécute 33 assertions internes couvrant la classification des IP, la classification des domaines, le parseur de paquets (construit à partir de fixtures TLS créées à la main, dont un vrai ClientHello Windows/Edge tronqué qui avait autrefois cassé l'extraction du SNI), le réassemblage TCP, la détection UDP/QUIC, la construction des requêtes ASN, le cycle complet de la baseline, et la sûreté des sorties (échappement HTML, validation des noms d'hôte, protection CSV contre les formules, et un export HTML complet de bout en bout). Aucune capture réelle, aucun droit admin requis.
 
 ## Dépannage
 
