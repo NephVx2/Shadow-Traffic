@@ -116,7 +116,7 @@ For a more detailed walkthrough (including what each warning actually means and 
 
 ## Quick start
 
-Check that the script runs correctly on your machine (no capture, no admin rights needed — runs 31 internal checks and exits):
+Check that the script runs correctly on your machine (no capture, no admin rights needed — runs 33 internal checks and exits):
 ```powershell
 .\Shadow-Traffic.ps1 -SelfTest
 ```
@@ -164,7 +164,7 @@ Quiet run for a scheduled task (still writes the reports, no console output, no 
 | `-PurgeDays <N>` | `60` | Deletes this script's own reports (json/csv/html/log) older than N days. `0` disables purging. The baseline file is never purged. |
 | `-NoToast` | off | Disables the desktop notification shown when the run finishes. |
 | `-DebugClientHello` | off | Saves, in hex, any ClientHello the parser detected but couldn't extract an SNI from (direct or after reassembly), to a `Debug-ClientHello\` subfolder — useful for reporting a parser bug. |
-| `-SelfTest` | off | Runs the built-in test suite (31 assertions) and exits. No real capture, no admin rights needed. |
+| `-SelfTest` | off | Runs the built-in test suite (33 assertions) and exits. No real capture, no admin rights needed. |
 | `-Silent` | off | Reduces console output to a minimum. Logs and reports are still written normally. |
 
 ## Reading the console output
@@ -191,7 +191,7 @@ A typical run prints:
    ```
    An icon turns into a green ✓ when its count is zero (anomalies, unclassified).
 5. If any anomalies were found, an **ANOMALIES** table listing each one — this is the section to look at first.
-6. An **UNCLASSIFIED** table, sorted by how often each endpoint was seen, with the columns `TARGET │ PROCESS │ COUNT │ SOURCE`. Endpoints never seen before get a `+` icon and a `NEW` tag. `SOURCE` tells you where the name came from: `SNI`, `PTR`, the ASN, or `no name` if it's a bare IP. Target names longer than 52 characters are shortened with `...` in the console only — the reports always contain the full name.
+6. An **UNCLASSIFIED** table, sorted by how often each endpoint was seen, with the columns `TARGET │ PROCESS │ COUNT │ SOURCE`. Endpoints never seen before get a `+` icon and a `NEW` tag. `SOURCE` tells you where the name came from: `SNI`, `PTR`, the ASN (organization and AS number, e.g. `Microsoft Corporation, US (AS8075)` — the HTML report keeps the full registry text), or `no name` if it's a bare IP. Target names longer than 52 characters are shortened with `...` in the console only — the reports always contain the full name.
 7. If applicable, a **VANISHED SINCE LAST RUN** table (endpoints that were present in the previous report but not this time — not necessarily a problem, connections can be one-off).
 8. If SNI capture is on and any SNI couldn't be matched to a TCP connection (the connection was too short-lived to be sampled), an **SNI CAPTURED WITH NO MATCHING TCP CONNECTION** table.
 9. A final **✓ AUDIT COMPLETE** banner listing every generated file (HTML report, JSON export, CSV export, log), then the prompt offering to open the HTML report and the "Press ENTER to close this window" box.
@@ -230,7 +230,7 @@ All files are written to `Desktop\Maintenance_Reports\Shadow-Traffic\`:
 | `Shadow-Traffic_<timestamp>.html` | The interactive report described above. |
 | `Shadow-Traffic_<timestamp>.json` | Full machine-readable snapshot of the run (all endpoints, counts, categories). |
 | `Shadow-Traffic_Unclassified_<timestamp>.csv` | Unclassified and ANOMALY endpoints only, for quick review in Excel. |
-| `Shadow-Traffic_<timestamp>.log` | Plain-text run log (timestamps, warnings, errors). |
+| `Shadow-Traffic_<timestamp>.log` | Plain-text run log (timestamps, warnings, errors, a one-line run summary and the baseline update). |
 | `Baseline_Shadow-Traffic.json` | Persistent history used to detect "never seen before" endpoints. Never purged by `-PurgeDays`. |
 
 ## Block-Telemetry integration
@@ -246,7 +246,7 @@ The SNI capture path (`-CaptureSNI`) necessarily sees which hostnames your machi
 ```powershell
 .\Shadow-Traffic.ps1 -SelfTest
 ```
-Runs 31 internal assertions covering IP classification, domain classification, the packet parser (built from hand-crafted TLS fixtures, including a real truncated Windows/Edge ClientHello that once broke SNI extraction), TCP reassembly, UDP/QUIC detection, ASN query construction, the baseline round-trip, and output safety (HTML escaping, hostname validation, CSV formula protection, and an end-to-end HTML export). No real capture, no admin rights required.
+Runs 33 internal assertions covering IP classification, domain classification, the packet parser (built from hand-crafted TLS fixtures, including a real truncated Windows/Edge ClientHello that once broke SNI extraction), TCP reassembly, UDP/QUIC detection, ASN query construction, the baseline round-trip, and output safety (HTML escaping, hostname validation, CSV formula protection, and an end-to-end HTML export). No real capture, no admin rights required.
 
 ## Troubleshooting
 
