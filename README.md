@@ -4,9 +4,9 @@
 
 **Sees what actually leaves the machine, right now — including what your DNS-based tools can't.**
 
-`Shadow-Traffic` watches real outbound TCP connections for a fixed window (default 2 minutes), reads the destination hostname straight off the wire when it can (via the TLS ClientHello's SNI field, using a hand-written low-level packet parser — no external capture tool required beyond Windows' own `pktmon`), and cross-references every endpoint against [Block-Telemetry](../Block-Telemetry)'s known-domain lists. The result: a live picture of what your machine is actually talking to, which process is responsible, and whether any of it is a blocked domain that's still getting through.
+`Shadow-Traffic` watches real outbound TCP connections for a fixed window (default 2 minutes), reads the destination hostname straight off the wire when it can (via the TLS ClientHello's SNI field, using a hand-written low-level packet parser — no external capture tool required beyond Windows' own `pktmon`), and cross-references every endpoint against [Block-Telemetry](https://github.com/NephVx2/Block-Telemetry)'s known-domain lists. The result: a live picture of what your machine is actually talking to, which process is responsible, and whether any of it is a blocked domain that's still getting through.
 
-> **Not to be confused with [Check-Network](../Check-Network)** — see [Shadow-Traffic vs. Check-Network](#shadow-traffic-vs-check-network) below if you're not sure which one you need.
+> **Not to be confused with [Check-Network](https://github.com/NephVx2/Check-Network)** — see [Shadow-Traffic vs. Check-Network](#shadow-traffic-vs-check-network) below if you're not sure which one you need.
 
 ---
 
@@ -35,7 +35,7 @@
 
 ## Why this exists
 
-[Block-Telemetry](../Block-Telemetry) blocks domains at the DNS level, by null-routing them in the hosts file. That's effective, but it's also blind in one specific way: it can only ever tell you what got *asked for by name*. A hardcoded IP address, a resolver baked into an app instead of the OS (DNS-over-HTTPS inside NVIDIA App, for example), or a domain nobody thought to add to the blocklist yet — none of that shows up in a hosts-file-based tool, because the DNS lookup that would have triggered the block never happens.
+[Block-Telemetry](https://github.com/NephVx2/Block-Telemetry) blocks domains at the DNS level, by null-routing them in the hosts file. That's effective, but it's also blind in one specific way: it can only ever tell you what got *asked for by name*. A hardcoded IP address, a resolver baked into an app instead of the OS (DNS-over-HTTPS inside NVIDIA App, for example), or a domain nobody thought to add to the blocklist yet — none of that shows up in a hosts-file-based tool, because the DNS lookup that would have triggered the block never happens.
 
 `Shadow-Traffic` asks a different question than "is this domain on the list?". It asks **"what is my computer actually connecting to, on the wire, right now?"** — by sampling real TCP connections and, where possible, reading the real destination name straight out of the TLS handshake, regardless of whether a DNS lookup for it was ever logged. It's the difference between checking a guest list and standing at the door.
 
@@ -73,7 +73,7 @@ Both scripts inspect network activity, both produce an HTML/JSON/CSV report, and
 - Reassembles a ClientHello that got split across two TCP segments on the wire (best-effort, contiguous segments only).
 - Counts UDP:443 traffic (QUIC/HTTP3) separately, so it's visible in the totals even though its contents aren't decoded.
 - Resolves a reverse DNS (PTR) name for endpoints with no captured SNI, and falls back to an ASN/organization lookup (via Team Cymru's public DNS service, no API key needed) when even that fails — so "204.79.197.203" becomes "Microsoft Corporation (AS8075)" instead of staying an opaque number.
-- Cross-references every named endpoint against [Block-Telemetry](../Block-Telemetry)'s blocked and whitelisted domain lists, and flags anything that matches a **blocked** domain as an **ANOMALY** (it got through despite being on the blocklist — a bypass).
+- Cross-references every named endpoint against [Block-Telemetry](https://github.com/NephVx2/Block-Telemetry)'s blocked and whitelisted domain lists, and flags anything that matches a **blocked** domain as an **ANOMALY** (it got through despite being on the blocklist — a bypass).
 - Keeps a persistent baseline (`Baseline_Shadow-Traffic.json`) across runs, so it can flag endpoints that have **never been seen before**.
 - Compares against the previous run's report to flag endpoints that were present before and have **vanished** this time.
 - Produces a dark-themed HTML report in the same style as Check-Security: summary cards, a classification bar, the evolution since the last run, a history chart, live search, filter chips and sortable columns.
@@ -87,15 +87,15 @@ Both scripts inspect network activity, both produce an HTML/JSON/CSV report, and
 - It does **not** handle IPv6 extension headers in the packet parser.
 - It does **not** reassemble more than two contiguous TCP segments, and cannot recover from packet loss or reordering — a ClientHello split across many out-of-order segments may be missed.
 - It does **not** replace a real network capture tool for deep investigation — if `Shadow-Traffic` flags something suspicious, a proper packet capture (Wireshark) is still the right next step for a full investigation.
-- It does **not** check the health of your connection, your DNS configuration, or your adapters — that's [Check-Network](../Check-Network)'s job.
-- It does **not** block anything itself — it only observes and reports. Blocking is [Block-Telemetry](../Block-Telemetry)'s job.
+- It does **not** check the health of your connection, your DNS configuration, or your adapters — that's [Check-Network](https://github.com/NephVx2/Check-Network)'s job.
+- It does **not** block anything itself — it only observes and reports. Blocking is [Block-Telemetry](https://github.com/NephVx2/Block-Telemetry)'s job.
 
 ## Requirements
 
 - Windows 10 (1809+) or Windows 11 — `pktmon` (used for `-CaptureSNI`) ships natively from these versions on.
 - PowerShell 5.1 (built into Windows) or PowerShell 7+.
 - Administrator rights are **only** required for `-CaptureSNI`. The script prompts for elevation automatically (UAC) when that flag is used; the base TCP-only audit runs fine without admin rights.
-- [Block-Telemetry](../Block-Telemetry) is optional but strongly recommended — without it, every endpoint will show up as "Unclassified" instead of Known/ANOMALY, since there's nothing to compare against.
+- [Block-Telemetry](https://github.com/NephVx2/Block-Telemetry) is optional but strongly recommended — without it, every endpoint will show up as "Unclassified" instead of Known/ANOMALY, since there's nothing to compare against.
 
 ## First run (step by step)
 
@@ -235,7 +235,7 @@ All files are written to `Desktop\Maintenance_Reports\Shadow-Traffic\`:
 
 ## Block-Telemetry integration
 
-`Shadow-Traffic` reads [Block-Telemetry](../Block-Telemetry)'s domain lists (blocked + whitelisted) to classify what it sees — it doesn't modify Block-Telemetry or your hosts file in any way, it only reads the list for comparison. If Block-Telemetry isn't found (wrong path, not installed, or renamed), the audit still runs, but every endpoint will show up as "Unclassified" since there's nothing to compare against. Point `-BlockTelemetryPath` at the exact file if auto-detection doesn't find it.
+`Shadow-Traffic` reads [Block-Telemetry](https://github.com/NephVx2/Block-Telemetry)'s domain lists (blocked + whitelisted) to classify what it sees — it doesn't modify Block-Telemetry or your hosts file in any way, it only reads the list for comparison. If Block-Telemetry isn't found (wrong path, not installed, or renamed), the audit still runs, but every endpoint will show up as "Unclassified" since there's nothing to compare against. Point `-BlockTelemetryPath` at the exact file if auto-detection doesn't find it.
 
 ## Privacy
 
